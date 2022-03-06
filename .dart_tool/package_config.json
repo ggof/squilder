@@ -326,6 +326,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "uuid",
+      "rootUri": "file:///home/gabriel/.pub-cache/hosted/pub.dartlang.org/uuid-3.0.6",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "vm_service",
       "rootUri": "file:///home/gabriel/.pub-cache/hosted/pub.dartlang.org/vm_service-5.5.0",
       "packageUri": "lib/",
@@ -362,7 +368,7 @@
       "languageVersion": "2.14"
     }
   ],
-  "generated": "2022-03-06T19:04:31.187111Z",
+  "generated": "2022-03-06T20:22:15.826627Z",
   "generator": "pub",
   "generatorVersion": "2.14.4"
 }

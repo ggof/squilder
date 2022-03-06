@@ -12,9 +12,9 @@ abstract class TableFields {
 class TableField<T> implements Serializable {
   final String name;
   final Table table;
-  final String defaultValue;
+  final String? defaultValue;
 
-  TableField(this.table, this.name, [this.defaultValue = ""]);
+  TableField(this.table, this.name, [this.defaultValue]);
 
   EqualFieldCondition<T> eqToField(TableField<T> field) =>
       EqualFieldCondition<T>(this, field);

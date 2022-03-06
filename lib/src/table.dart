@@ -5,18 +5,17 @@ import 'package:squilder/src/table_fields.dart';
 import 'package:squilder/utils.dart' as utils;
 
 abstract class Table implements Serializable {
-  String get name;
   TableFields get f;
 
   TableField get primaryKey;
 
   String toSql() {
-    return "`${utils.escape(name)}`";
+    return "`${utils.escape(toString())}`";
   }
 
-  bool operator ==(other) {
-    return other is Table && other.name == name;
-  }
+  String toString();
 
-  int get hashCode => name.hashCode;
+  bool operator ==(other) => other is Table && other.toString() == toString();
+
+  int get hashCode => toString().hashCode;
 }

@@ -1,32 +1,29 @@
 library squilder.schema_generator;
 
 import 'dart:async';
-import 'dart:ffi';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:squilder/src/generator/generator_config.dart';
 import 'package:squilder/utils.dart';
+import 'package:uuid/uuid.dart';
 
 class _Field {
   final String name;
   final String type;
   final bool isNull;
-  final String key;
   final dynamic defaultValue;
-  final String extra;
 
-  _Field(this.name, this.type, this.isNull, this.key, this.defaultValue,
-      this.extra);
+  _Field(this.name, this.type, this.isNull, this.defaultValue);
 
   String toString() {
-    return "<_Field name: $name, type: $type, isNull: $isNull, key: $key, defaultValue: $defaultValue, extra: $extra>";
+    return "<_Field name: $name, type: $type, isNull: $isNull, defaultValue: $defaultValue>";
   }
 
   String get dartType {
     if (type.startsWith(new RegExp(r"(tiny|small|medium|big)?int"))) {
       return "int";
-    } else if (type.startsWith(new RegExp(r"(tiny|small|medium|big)?blob"))) {
+    } else if (type.startsWith(new RegExp(r"(tiny|small|medium|big)?blob")) ||
+        type == "bytea") {
       return "List<int>";
     } else if (type.startsWith("varchar") ||
         type.startsWith(new RegExp(r"(tiny|small|medium|big)?text")) ||
@@ -36,8 +33,12 @@ class _Field {
       return "DateTime";
     } else if (type.startsWith("decimal")) {
       return "double"; // for now
-    } else if (type.startsWith("float") || type.startsWith("double")) {
+    } else if (type.startsWith("float") ||
+        type.startsWith("double") ||
+        type.startsWith("real")) {
       return "double";
+    } else if (type == 'uuid') {
+      return "String"; // for now
     } else {
       throw "Unknown type $type";
     }
@@ -49,8 +50,7 @@ class _Field {
 String _generateCodeForFieldDeclarations(Iterable<_Field> fields,
     {int shift: 2}) {
   return fields.map((field) {
-    return """TableField<${field.dartType}> _${field.camelizedName};
-${" " * shift}TableField<${field.dartType}> get ${field.camelizedName} => _${field.camelizedName};""";
+    return """final TableField<${field.dartType}> ${field.camelizedName};""";
   }).join("\n\n${" " * shift}");
 }
 
@@ -65,11 +65,15 @@ String sqlValueToDart(Object? value) {
 }
 
 String _generateCodeForFieldInitializations(Iterable<_Field> fields,
-    {int shift: 2}) {
-  return fields.map((field) {
-    return """_${field.camelizedName} = new TableField<${field.dartType}>(table, "${field.name}", ${sqlValueToDart(field.defaultValue)});""";
-  }).join("\n${" " * shift}");
-}
+        {int shift = 2}) =>
+    fields.map((field) {
+      return """${field.camelizedName} = TableField<${field.dartType}>(table, "${field.name}", ${sqlValueToDart(field.defaultValue)})""";
+    }).join(",\n" + ' ' * shift);
+
+String _generateFieldGetters(Iterable<_Field> fields, {int shift = 2}) => fields
+    .map((f) =>
+        "TableField<${f.dartType}> get ${f.camelizedName} => f.${f.camelizedName};")
+    .join(' ' * shift + "\n");
 
 String _generateCodeForTable(String tableName, Iterable<_Field> fields) {
   var tableClass = "${camelize(tableName, capitalizeFirst: true)}Table";
@@ -79,34 +83,34 @@ String _generateCodeForTable(String tableName, Iterable<_Field> fields) {
       fields.firstWhere((f) => f.name == "id", orElse: () => fields.first);
   var allFields = fields.map((f) => f.camelizedName).join(", ");
   return """class $tableClass extends Table {
-  String get name => "$tableName";
+  String toString() => "$tableName";
 
-  $fieldsClass _f;
-  $fieldsClass get f => _f;
+  late final $fieldsClass f;
+  
+  ${_generateFieldGetters(fields)}
 
   TableField<${primaryKeyField.dartType}> get primaryKey => f.${primaryKeyField.camelizedName};
 
   $tableClass() {
-    _f = new $fieldsClass(this);
+    f = new $fieldsClass(this);
   }
 }
 
-final $tableClass $tableNameVar = new $tableClass();
+final $tableNameVar = $tableClass();
 
 class $fieldsClass extends TableFields {
   ${_generateCodeForFieldDeclarations(fields, shift: 2)}
 
   Iterable<TableField> get all => [$allFields];
 
-  $fieldsClass($tableClass table) {
+  $fieldsClass($tableClass table) :
     ${_generateCodeForFieldInitializations(fields, shift: 4)};
-  }
 }""";
 }
 
 Future<void> generate({
   String host = "localhost",
-  String user = "root",
+  String username = "root",
   required String password,
   int port = 3306,
   required String database,
@@ -119,7 +123,7 @@ Future<void> generate({
     database: database,
     output: output,
     library: library,
-    username: user,
+    username: username,
     password: password,
   );
 
@@ -127,7 +131,12 @@ Future<void> generate({
 
   await db.open();
 
-  var tableNames = (await db.query("SHOW TABLES")).map((r) => r[0]);
+  final query = """SELECT tablename
+FROM pg_catalog.pg_tables
+WHERE schemaname != 'pg_catalog' AND 
+    schemaname != 'information_schema';""";
+
+  var tableNames = (await db.query(query)).map((r) => r[0]);
   var code = new StringBuffer();
   code.write("""library ${config.library};
 
@@ -135,11 +144,21 @@ import 'package:squilder/squilder.dart';
 
 """);
   for (var tableName in tableNames) {
-    var results = await db.query("DESCRIBE $tableName");
-    var fields = results.map((result) {
-      return new _Field(result[0], result[1].toString(), result[2] == "YES",
-          result[3], result[4], result[5].toString());
-    });
+    var results = await db.query("""SELECT 
+   column_name, 
+   data_type,
+   is_nullable,
+   column_default
+FROM 
+   information_schema.columns
+WHERE 
+   table_name = '$tableName';""");
+    var fields = results.map((result) => _Field(
+          result[0],
+          result[1].toString(),
+          result[2] == "YES",
+          result[3],
+        ));
     code.writeln(_generateCodeForTable(tableName, fields));
   }
   new File(config.output).writeAsStringSync(code.toString());
