@@ -1,15 +1,14 @@
 name: squilder
-description: Type-safe builder of SQL strings
+description: Type-safe builder of SQL strings (forked from astashov)
 version: 0.0.2
-author: Anton Astashov <anton.astashov@gmail.com>
-homepage: https://github.com/astashov/squilder
+homepage: https://github.com/ggof/squilder
 
 environment:
-  sdk: '>=1.12.0 <2.0.0'
+  sdk: '>=2.14.0 <3.0.0'
 
 dependencies:
-  dapter: any
+  postgres:
 
 dev_dependencies:
-  test: any
-  tuneup: any
+  test:
+  test_coverage:

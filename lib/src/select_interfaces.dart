@@ -49,7 +49,7 @@ abstract class OnStep {
 }
 
 abstract class WhereStep extends GroupByStep {
-  WhereStep where(Condition condition);
+  SelectStep where(Condition condition);
 }
 
 abstract class GroupByStep extends HavingStep {

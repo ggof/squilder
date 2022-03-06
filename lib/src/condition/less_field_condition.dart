@@ -1,12 +1,10 @@
 part of squilder.condition;
 
-class LessFieldCondition<T> extends Object with Condition {
+class LessFieldCondition<T> with Condition {
   final TableField<T> fieldOne;
   final TableField<T> fieldTwo;
 
   LessFieldCondition(this.fieldOne, this.fieldTwo);
 
-  String toSql() {
-    return "${fieldOne.toSql()} < ${fieldTwo.toSql()}";
-  }
+  String toSql() => "${fieldOne.toSql()} < ${fieldTwo.toSql()}";
 }

@@ -3,66 +3,54 @@ library squilder.test.support.tables;
 import 'package:squilder/squilder.dart';
 
 class OrderTable extends Table {
-  String get name => "orders";
+  late final OrderTableFields f;
 
-  OrderTableFields _f;
-  OrderTableFields get f => _f;
+  String get name => "orders";
 
   TableField<int> get primaryKey => f.id;
 
   OrderTable() {
-    _f = new OrderTableFields(this);
+    f = OrderTableFields(this);
   }
 }
 
 final OrderTable orders = new OrderTable();
 
 class OrderTableFields extends TableFields {
-  TableField<int> _id;
-  TableField<int> get id => _id;
-
-  TableField<String> _name;
-  TableField<String> get name => _name;
+  late final TableField<int> id;
+  late final TableField<String> name;
 
   Iterable<TableField> get all => [id, name];
 
   OrderTableFields(Table table) {
-    _id = new TableField<int>(table, "id");
-    _name = new TableField<String>(table, "name");
+    id = TableField<int>(table, "id");
+    name = TableField<String>(table, "name");
   }
 }
 
 class OrderRecipientsTable extends Table {
-  String get name => "order_recipients";
+  late final OrderRecipientsFields f;
 
-  OrderRecipientsFields _f;
-  OrderRecipientsFields get f => _f;
+  String get name => "order_recipients";
 
   TableField<int> get primaryKey => f.id;
 
   OrderRecipientsTable() {
-    _f = new OrderRecipientsFields(this);
+    f = OrderRecipientsFields(this);
   }
 }
 
-final orderRecipients = new OrderRecipientsTable();
+final orderRecipients = OrderRecipientsTable();
 
 class OrderRecipientsFields extends TableFields {
-  TableField<int> _id;
-  TableField<int> get id => _id;
-
-  TableField<String> _name;
-  TableField<String> get name => _name;
-
-  TableField<int> _orderId;
-  TableField<int> get orderId => _orderId;
+  final TableField<int> id;
+  final TableField<String> name;
+  final TableField<int> orderId;
 
   Iterable<TableField> get all => [id, name, orderId];
 
-  OrderRecipientsFields(Table table) {
-    _id = new TableField<int>(table, "id");
-    _name = new TableField<String>(table, "name");
-    _orderId = new TableField<int>(table, "order_id");
-  }
+  OrderRecipientsFields(Table table)
+      : id = TableField(table, "id"),
+        name = TableField(table, "name"),
+        orderId = TableField(table, "order_id");
 }
-

@@ -1,6 +1,6 @@
 part of squilder.condition;
 
-class AndConditionPair extends Object with Condition {
+class AndConditionPair with Condition {
   final Condition one;
   final Condition two;
 

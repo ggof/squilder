@@ -1,14 +1,10 @@
 part of squilder.condition;
 
-
-class LikeCondition extends Object with Condition {
+class LikeCondition with Condition {
   final TableField field;
   final String pattern;
 
   LikeCondition(this.field, this.pattern);
 
-  String toSql() {
-    return "${field.toSql()} LIKE ${utils.objectToSql(pattern)}";
-  }
+  String toSql() => "${field.toSql()} LIKE ${utils.objectToSql(pattern)}";
 }
-

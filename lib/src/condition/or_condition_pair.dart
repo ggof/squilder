@@ -1,13 +1,10 @@
 part of squilder.condition;
 
-class OrConditionPair extends Object with Condition {
+class OrConditionPair with Condition {
   final Condition one;
   final Condition two;
 
   OrConditionPair(this.one, this.two);
 
-  String toSql() {
-    return "(${one.toSql()} OR ${two.toSql()})";
-  }
+  String toSql() => "(${one.toSql()} OR ${two.toSql()})";
 }
-

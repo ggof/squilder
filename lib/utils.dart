@@ -4,7 +4,7 @@ String escape(String sql) {
   return sql.replaceAll("\\", "\\\\").replaceAll("'", "\\'");
 }
 
-String objectToSql(Object object) {
+String objectToSql(Object? object) {
   if (object is num) {
     return escape(object.toString());
   } else if (object == null) {
@@ -16,7 +16,7 @@ String objectToSql(Object object) {
 
 final _camelizeMatcher = new RegExp(r"[\s_-]+");
 final _capitalizeMatcher = new RegExp(r"([\s]+|^)(.)");
-String _capitalizeMatch(Match match) => match[1] + match[2].toUpperCase();
+String _capitalizeMatch(Match match) => match[1]! + match[2]!.toUpperCase();
 
 /// Converts a string that has spaces, underscores or dashes into a camelized string.
 ///

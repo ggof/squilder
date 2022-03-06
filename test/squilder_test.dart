@@ -9,7 +9,8 @@ import 'package:test/test.dart';
 class OrderTable extends Table {
   String get name => "orders";
 
-  OrderTableFields _f;
+  late final OrderTableFields _f;
+
   OrderTableFields get f => _f;
 
   TableField<int> get primaryKey => f.id;
@@ -22,10 +23,12 @@ class OrderTable extends Table {
 final orders = new OrderTable();
 
 class OrderTableFields extends TableFields {
-  TableField<int> _id;
+  late final TableField<int> _id;
+
   TableField<int> get id => _id;
 
-  TableField<String> _name;
+  late final TableField<String> _name;
+
   TableField<String> get name => _name;
 
   Iterable<TableField> get all => [id, name];
@@ -39,57 +42,53 @@ class OrderTableFields extends TableFields {
 class OrderRecipientsTable extends Table {
   String get name => "order_recipients";
 
-  OrderRecipientsFields _f;
-  OrderRecipientsFields get f => _f;
+  late final OrderRecipientsFields f;
 
   TableField<int> get primaryKey => f.id;
 
   OrderRecipientsTable() {
-    _f = new OrderRecipientsFields(this);
+    f = new OrderRecipientsFields(this);
   }
 }
 
 final orderRecipients = new OrderRecipientsTable();
 
 class OrderRecipientsFields extends TableFields {
-  TableField<int> _id;
-  TableField<int> get id => _id;
+  late final TableField<int> id;
 
-  TableField<String> _name;
-  TableField<String> get name => _name;
+  late final TableField<String> name;
 
-  TableField<int> _orderId;
-  TableField<int> get orderId => _orderId;
+  late final TableField<int> orderId;
 
   Iterable<TableField> get all => [id, name, orderId];
 
   OrderRecipientsFields(Table table) {
-    _id = new TableField<int>(table, "id");
-    _name = new TableField<String>(table, "name");
-    _orderId = new TableField<int>(table, "order_id");
+    id = TableField<int>(table, "id");
+    name = TableField<String>(table, "name");
+    orderId = TableField<int>(table, "order_id");
   }
 }
 
 void main() {
   group('A group of tests', () {
-
-    setUp(() {
-
-    });
+    setUp(() {});
 
     test('select Test', () {
       String sql = select(orders.f.all)
           .from([orders])
-          .innerJoin(orderRecipients).on(orders.f.id.eqToField(orderRecipients.f.orderId))
+          .innerJoin(orderRecipients)
+          .on(orders.f.id.eqToField(orderRecipients.f.orderId))
           .where(orders.f.id.eqToObj(5).and(orders.f.name.like("%blah%")))
-          .union(select(orders.f.all).from([orders]).where(orders.f.id.eqToObj(6)))
+          .union(
+              select(orders.f.all).from([orders]).where(orders.f.id.eqToObj(6)))
           .toSql();
       print(sql);
       expect(true, isTrue);
     });
 
     test('insertInto Test', () {
-      String sql = insertInto(orderRecipients, [orderRecipients.f.name, orderRecipients.f.orderId])
+      String sql = insertInto(orderRecipients,
+              [orderRecipients.f.name, orderRecipients.f.orderId])
           .values(["new", 5])
           .onDuplicateKeyUpdate()
           .setObj(orderRecipients.f.name, "default")

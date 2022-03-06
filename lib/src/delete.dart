@@ -10,15 +10,11 @@ DeleteWhereStep delete(Table table) {
 
 class Delete implements DeleteWhereStep {
   final Table table;
-  final Condition whereCondition;
+  final Condition? whereCondition;
 
-  Delete._({
-      this.table,
-      this.whereCondition});
+  Delete._({required this.table, this.whereCondition});
 
-  Delete _update({
-      Table table,
-      Condition whereCondition}) {
+  Delete _update({Table? table, Condition? whereCondition}) {
     return new Delete._(
         table: table ?? this.table,
         whereCondition: whereCondition ?? this.whereCondition);
@@ -27,12 +23,13 @@ class Delete implements DeleteWhereStep {
   String toSql() {
     var sql = "DELETE FROM ${table.toSql()}";
     if (whereCondition != null) {
-      sql += " WHERE ${whereCondition.toSql()}";
+      sql += " WHERE ${whereCondition?.toSql()}";
     }
     return sql;
   }
 
-  DeleteWhereStep where(Condition condition) {
-    return _update(whereCondition: (whereCondition != null ? whereCondition.and(condition) : condition));
-  }
+  DeleteWhereStep where(Condition condition) => _update(
+      whereCondition: (whereCondition != null
+          ? whereCondition!.and(condition)
+          : condition));
 }

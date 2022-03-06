@@ -1,6 +1,6 @@
 part of squilder.condition;
 
-class EqualObjectCondition<T> extends Object with Condition {
+class EqualObjectCondition<T> with Condition {
   final TableField<T> field;
   final T object;
 
